@@ -27,5 +27,34 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          password: ${{ secrets.EC2_PASSWORD }}
+          port: ${{ secrets.EC2_PORT }}
+          script: |
+            mkdir -p ~/mi-app-node
+            cd ~/mi-app-node
+
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/Adrian-Garcia-Cuya/authentication-node-ts.git .
+            else
+              git pull origin dev
+            fi
+
+            npm ci --omit=dev
+
+            npm run build
+
+            pm2 delete mi-app-node 2>/dev/null || true
+
+            pm2 start dist/app.js --name "mi-app-node"
+
+            pm2 save
+
+            pm2 status
+
       - name: Build completed
         run: echo "✅ TypeScript compilation successful"
