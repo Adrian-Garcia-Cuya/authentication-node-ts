@@ -44,9 +44,9 @@ jobs:
               git pull origin dev
             fi
 
-            npm ci --omit=dev
-
+            npm ci
             npm run build
+            npm prune --omit=dev
 
             pm2 delete mi-app-node 2>/dev/null || true
 
